@@ -47,19 +47,25 @@ const SPORTS_CACHE_DURATION = 10 * 60 * 100;
 
 app.get("/api/sports", async (req, res) => {
     const now = Date.now();
-    if (sportsCache && now - lastSportFetchTime < SPORTS_CACHE_DURATION) {
+    if (sportsCache && now - lastSportsFetchTime < SPORTS_CACHE_DURATION) {
       console.log("Serving cached sports");
       return res.json(sportsCache);
     }
     try{
-    console.log("Fetching from GNews 🌍");
+    console.log("Fetching from GNews ...");
     const response = await fetch(
-      "https://gnews.io/api/v4/top-headlines?country=za&apikey=86694ebbca323058620c4731f041f8b6"
+      "https://gnews.io/api/v4/top-headlines?country=za&category=sport&apikey=86694ebbca323058620c4731f041f8b6"
     );
+    if(!response.ok){
+      throw Error('GNews status ${response.status}');
+    }
     const data = await response.json();
+    if(data.errors){
+      throw new Error(data.erroers[0]);
+    }
     sportsCache = data 
-    delete sportsCache.information;
-    lastSportFetchTime = now;
+    if (sportsCache.information) delete sportsCache.information;
+    lastSportsFetchTime = now;
     res.json(sportsCache);
   } catch (err) {
     console.error("GNews sports fetch error:" , err);
