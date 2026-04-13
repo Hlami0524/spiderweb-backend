@@ -46,16 +46,13 @@ let lastSportsFetchTime = 0;
 const SPORTS_CACHE_DURATION = 10 * 60 * 100;
 
 app.get("/api/sports", async (req, res) => {
-  try {
     const now = Date.now();
-
-    if (sportsCache && (now - lastSportsFetchTime < SPORTS_CACHE_DURATION)) {
-      console.log("Serving from cache 🧠");
+    if (sportsCache && now - lastSportFetchTime < SPORTS_CACHE_DURATION) {
+      console.log("Serving cached sports");
       return res.json(sportsCache);
     }
-
+    try{
     console.log("Fetching from GNews 🌍");
-
     const response = await fetch(
       "https://gnews.io/api/v4/top-headlines?country=za&apikey=86694ebbca323058620c4731f041f8b6"
     );
