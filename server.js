@@ -41,12 +41,15 @@ app.get("/api/news", async (req, res) => {
   }
 }); 
 
+let sportsCache = null;
+let lastSportsFetchTime = 0;
+const SPORTS_CACHE_DURATION = 10 * 60 * 100;
 
 app.get("/api/sports", async (req, res) => {
   try {
     const now = Date.now();
 
-    if (sportsCache && (now - lastFetchTime < CACHE_DURATION)) {
+    if (sportsCache && (now - lastSportsFetchTime < SPORTS_CACHE_DURATION)) {
       console.log("Serving from cache 🧠");
       return res.json(sportsCache);
     }
@@ -56,44 +59,14 @@ app.get("/api/sports", async (req, res) => {
     const response = await fetch(
       "https://gnews.io/api/v4/top-headlines?country=za&apikey=86694ebbca323058620c4731f041f8b6"
     );
-
     const data = await response.json();
-
-    politicsCache = data;
-    lastFetchTime = now;
-
-    res.json(data);
-
+    sportsCache = data 
+    delete sportsCache.information;
+    lastSportFetchTime = now;
+    res.json(sportsCache);
   } catch (err) {
-    res.status(500).json({ error: "Failed to fetch news" });
-  }
-});
-
-
-app.get("/api/politics", async (req, res) => {
-  try {
-    const now = Date.now();
-
-    if (politicsCache && (now - lastFetchTime < CACHE_DURATION)) {
-      console.log("Serving from cache 🧠");
-      return res.json(politicsCache);
-    }
-
-    console.log("Fetching from GNews 🌍");
-
-    const response = await fetch(
-      "https://gnews.io/api/v4/top-headlines?country=za&apikey=86694ebbca323058620c4731f041f8b6"
-    );
-
-    const data = await response.json();
-
-    newsCache = data;
-    lastFetchTime = now;
-
-    res.json(data);
-
-  } catch (err) {
-    res.status(500).json({ error: "Failed to fetch news" });
+    console.error("GNews sports fetch error:" , err);
+    res.status(500).json({error:"Failed to fetch sports news"});
   }
 });
 
